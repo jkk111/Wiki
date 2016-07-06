@@ -2,19 +2,16 @@
 <html>
 <head>
   <title>Wiki</title>
-  <script src="loader.js"></script>
-  <script src="editor.js"></script>
-  <script src="template.js"></script>
-  <script src="home-template.js"></script>
-  <script src="wiki-template.js"></script>
-  <script src="search-template.js"></script>
-  <script src="wiki-view.js"></script>
-  <script src="home-view.js"></script>
+  <link rel="import" href="/bower_components/polymer/polymer.html">
+  <link rel="import" href="wiki-main.html">
+  <style>
+  wiki-main {
+    width: 100%;
+    height: 100%;
+  }
+  </style>
 </head>
 <body>
-  <div id="wiki-view">
-  </div>
-  <div id="home-view">
-  </div>
+  <wiki-main></wiki-main>
 </body>
 </html>
