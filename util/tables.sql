@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS articles (
   id BIGINT(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
   title TEXT NOT NULL,
   body TEXT NOT NULL,
-  minimum_level tinyint(1) DEFAULT -1 NOT NULL,
+  minimum_level ENUM('any', 'basic', 'trusted', 'moderator', 'administrator') NOT NULL,
   FULLTEXT(title,body)
 );
 
