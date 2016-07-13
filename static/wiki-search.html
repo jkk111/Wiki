@@ -1,0 +1,236 @@
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="bower_components/iron-a11y-keys/iron-a11y-keys.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="bower_components/iron-icon/iron-icon.html">
+<dom-module id="wiki-search">
+  <template class="default">
+    <style>
+      :host {
+        transition: all 0.5s;
+      }
+      #inlineSearchInput ::content paper-input-container {
+        background-color: white;
+        padding: 0!important;
+        border-radius: 20px;
+        border: thin solid black;
+        margin: 15px 0;
+      }
+
+      #inlineSearchInput ::content paper-input-container ::content .floated-label-placeholder {
+        display: none;
+      }
+      #inlineSearchInput ::content paper-input-container ::content input {
+        box-sizing: border-box;
+        padding: 8px 25px;
+      }
+      #inlineSearchInput ::content paper-input-container ::content .underline {
+        display: none;
+      }
+      #search-box {
+        width: 100%;
+        margin: 0;
+      }
+      #fullview {
+        overflow: auto;
+        text-rendering: optimizeSpeed;
+        position: fixed;
+        z-index: 10;
+        background-color: white;
+        transition: all 0.5s;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transform: translate(-100%, -100%);
+      }
+      #full-search-box {
+        margin: 0 20% ;
+      }
+      .expanded {
+        transform: translate(0, 0)!important;
+      }
+      #l {
+        width: 40px;
+        height: 40px;
+        background-color: yellow;
+      }
+      .article-preview {
+        width: 60%;
+        margin: 0 auto;
+        overflow: hidden;
+        word-break: break-all;
+      }
+      #search-pagination {
+        margin: 0 auto;
+        text-align: center;
+        padding: 30px 0;
+      }
+      .search-change-page-item {
+        cursor: pointer;
+        font-size: 2em;
+      }
+      .selected-item {
+        cursor: default;
+      }
+      .clickable {
+        cursor: pointer;
+      }
+      #close-button {
+        position: absolute;
+        top: 1em;
+        right: 1em;
+      }
+      .article-title {
+        cursor: pointer;
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none;   /* Chrome/Safari/Opera */
+        -khtml-user-select: none;    /* Konqueror */
+        -moz-user-select: none;      /* Firefox */
+        -ms-user-select: none;       /* Internet Explorer/Edge */
+        user-select: none;           /* Non-prefixed version, currently
+                                        not supported by any browser */
+      }
+    </style>
+    <div id="main" class="full">
+    <iron-a11y-keys id="a11y" target="[[inlineSearchInput]]" keys="enter" on-keys-pressed="toggle"></iron-a11y-keys>
+    <iron-a11y-keys id="a11y" target="[[rootEl]]" keys="esc" on-keys-pressed="exit"></iron-a11y-keys>
+    <iron-ajax id="searchAjax" url="{{searchUrl}}" method="GET" on-response="receivedSearchResponse"></iron-ajax>
+      <div id="inline-search-box">
+        <paper-input id="inlineSearchInput" placeholder="Search…" value="{{currentSearch}}"></paper-input>
+      </div>
+      <div id="fullview">
+        <iron-icon id="close-button" class="clickable" on-tap="toggle" icon="icons:close"></iron-icon>
+        <div id="full-search-box">
+          <paper-input id="fullSearchInput" placeholder="Search…" value="{{currentSearch}}"></paper-input>
+        </div>
+        <template is="dom-repeat" items="{{pagify(searchData, searchPage, 10)}}">
+          <div class="article-preview">
+            <h3 class="article-title" on-tap="openArticle" article="{{item}}">
+              {{item.title}}
+            </h3>
+            <div class="article-snippet">
+              {{createSnippet(item.body)}}
+            </div>
+          </div>
+        </template>
+        <div id="search-pagination">
+          <template is="dom-repeat" items="{{genSearchPages(searchData, 10)}}">
+            <template is="dom-if" if="{{isCurrentPage(searchPage, item)}}">
+              <span class="search-change-page-item selected-item"><b>{{item}}</b></span>
+            </template>
+            <template is="dom-if" if="{{!isCurrentPage(searchPage, item)}}">
+              <span class="search-change-page-item" on-tap="changePage" page="{{item}}">{{item}}</span>
+            </template>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'wiki-search',
+      properties: {
+        currentSearch: {
+          type: String,
+          observer: 'searchChanged'
+        },
+        searchData: {
+          type: Array,
+          value: []
+        },
+        inlineSearchInput: {
+          type: Object,
+          value: function() {
+            return this.$.inlineSearchInput;
+          }
+        },
+        searchUrl: {
+          type: String,
+          computed: 'computeSearchUrl(currentSearch)'
+        },
+        searchPage: {
+          type: Number,
+          value: 0
+        },
+        rootEl: {
+          type: Object,
+          value: function() {
+            return this;
+          }
+        }
+      },
+      openArticle: function(e) {
+        var payload = e.target.article;
+        console.log(payload);
+        this.fire("article-load", payload);
+        console.log("fired event");
+        this.toggle();
+      },
+      genSearchPages: function(data, numPerPage) {
+        console.log(data.length, numPerPage)
+        var numPages = Math.ceil(data.length/numPerPage);
+        var pages = [];
+        for(var i = 1; i <= numPages; i++) {
+          pages.push(i);
+        }
+        return pages;
+      },
+      searchChanged: function(q) {
+        if(q != "" && q != undefined) {
+          this.toggle(true);
+          this.$.searchAjax.generateRequest();
+        }
+      },
+      receivedSearchResponse: function(e, data) {
+        var res = data.response;
+        this.set("searchData", res);
+        console.log(res);
+      },
+      createSnippet: function(text) {
+        var maxlen = 300;
+        return text.substring(0, maxlen) + (text.length > maxlen ? "…" : "");
+      },
+      pagify: function(data, page, itemsPerPage) {
+        var start = page * itemsPerPage;
+        var end = start + itemsPerPage;
+        return data.slice(start, end);
+      },
+      exit: function() {
+        this.toggle(false, true);
+      },
+      toggle: function(close, fromEsc) {
+        var el = this.$.fullview;
+        this.searchPage = 0;
+        console.log()
+        if(el.classList.contains("expanded") && close != true) {
+          el.classList.remove("expanded");
+          if(fromEsc == true) {
+            this.$.inlineSearchInput.focus();
+          }
+        } else {
+          el.classList.add("expanded");
+          var e = this.$.fullSearchInput;
+          if(e) {
+            e.inputElement.focus();
+          } else {
+            console.log("not exists");
+          }
+        }
+      },
+      changePage: function(e) {
+        var el = e.target;
+        this.searchPage = el.page - 1;
+      },
+      isCurrentPage: function(current, page) {
+        return page == current + 1;
+      },
+      computeSearchUrl: function(q) {
+        console.log("generating search url");
+        return `/search?q=${q}`;
+      },
+      attached: function() {
+
+      }
+    })
+  </script>
+</dom-module>
