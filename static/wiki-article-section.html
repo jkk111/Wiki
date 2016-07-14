@@ -1,0 +1,71 @@
+<dom-module id="wiki-article-section">
+  <style>
+    .section {
+      text-align: center;
+      word-wrap: break-word;
+    }
+    .header-3 {
+      font-weight: 500;
+      font-size: x-large;
+      padding: 0 10%;
+    }
+    .section-content {
+      text-align: justify;
+      width: 80%;
+      margin: 1em auto;
+    }
+  </style>
+  <template>
+    <div class="section">
+      <template is="dom-if" if="{{isBasic(section)}}">
+        <p class="section-content">{{section}}</p>
+      </template>
+      <template is="dom-if" if="{{!isBasic(section)}}">
+        <template is="dom-if" if="{{hasKey(section, 'title')}}">
+          <div class$="header-{{headerSize}}">{{section.title}}</div>
+        </template>
+        <br>
+        <template is="dom-if" if="{{hasKey(section, 'body')}}">
+          <template is="dom-if" if="{{isMulti(section.body)}}">
+            <template is="dom-repeat" items="{{section.body}}">
+              <p class="section-content">{{item}}</p>
+            </template>
+          </template>
+          <template is="dom-if" if="{{!isMulti(section.body)}}">
+            <p class="section-content">{{section.body}}</p>
+          </template>
+        </template>
+      </template>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'wiki-article-section',
+      properties: {
+        section: {
+
+        },
+        headerSize: {
+          type: Number,
+          computed: 'computeHeaderSize(section)'
+        }
+      },
+      isBasic: function(o) {
+        return typeof o != "object";
+      },
+      hasKey: function(o, key) {
+        console.log(o[key])
+        return o[key] != undefined;
+      },
+      isMulti: function(o) {
+        return Array.isArray(o);
+      },
+      computeHeaderSizeClass: function(size) {
+        return "header-test";
+      },
+      computeHeaderSize: function(o) {
+        return o.headerSize || 3;
+      }
+    })
+  </script>
+</dom-module>

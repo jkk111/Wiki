@@ -1,0 +1,47 @@
+<link rel="import" href="wiki-article-section.html">
+<dom-module id="wiki-article">
+  <style>
+    #article {
+      overflow: auto;
+    }
+    .article-title {
+      text-align: center;
+      word-wrap: break-word;
+      padding: 16px 10%;
+    }
+    .article-content {
+      word-wrap: break-word;
+      max-width: 80%;
+      margin: 0 auto;
+    }
+  </style>
+  <template>
+    <div id="article">
+      <h1 class="article-title">{{article.title}}</h1>
+      <template is="dom-if" if="{{simpleBody(article)}}">
+        <p class="article-content">{{article.body}}</p>
+      </template>
+      <template is="dom-if" if="{{!simpleBody(article)}}">
+        <template is="dom-repeat" items="{{article.body}}">
+          <wiki-article-section section="{{item}}">
+          </wiki-article-section>
+        </template>
+      </template>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'wiki-article',
+      properties: {
+        article: Object,
+        observer: "articleChanged"
+      },
+      simpleBody: function(article) {
+        return typeof article.body != "object";
+      },
+      articleChanged: function(article) {
+        this.$.article.scrollTop = 0;
+      }
+    })
+  </script>
+</dom-module>
