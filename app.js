@@ -14,10 +14,52 @@ function generateDummyResults(num, query) {
   for(var i = 0; i < num; i++) {
     var post = {};
     post.title = computeRandomString(randomRange(16, 40));
-    post.body = computeRandomString(20, 400) + query + computeRandomString(20, 400);
+    post.body = computeRandomBody(1, 50, query);
     payload.push(post);
   }
-  return payload
+  return payload;
+}
+
+function computeRandomBody(min, max, query) {
+  var numSections = randomRange(min, max);
+  if(numSections == 1) {
+    return computeRandomString(20, 400) + query + computeRandomString(20, 400);
+  }
+  var infuseAt = randomRange(0, numSections -1);
+  var body = [];
+  for(var i = 0; i < numSections; i++) {
+    var isSimple = Math.random() > 0.5;
+    if(isSimple) {
+      if(i == infuseAt) {
+        body.push(computeRandomString(20, 400) + query + computeRandomString(20, 400));
+      } else {
+        body.push(computeRandomString(40, 800));
+      }
+    } else {
+      var numParagraphs = randomRange(1, 8);
+      var el = {};
+      el.title = computeRandomString(20, 60);
+      if(numParagraphs == 1) {
+        if(i == infuseAt)
+          el.body = computeRandomString(20, 300) + query + computeRandomString(20, 300);
+        else
+          el.body = computeRandomString(20, 600);
+        body.push(el)
+        continue;
+      }
+      el.body = [];
+      var infuseAtParagraph = randomRange(0, numParagraphs -1);
+      for(var j = 0; j < numParagraphs; j++) {
+        if(i == infuseAt && j == infuseAtParagraph) {
+          el.body.push(computeRandomString(20, 300) + query + computeRandomString(20, 300));
+        } else {
+          el.body.push(computeRandomString(40, 1000));
+        }
+      }
+      body.push(el);
+    }
+  }
+  return body;
 }
 
 function randomRange(min, max) {
