@@ -11,7 +11,7 @@
       #inlineSearchInput ::content paper-input-container {
         background-color: white;
         padding: 0!important;
-        border-radius: 20px;
+        border-radius: 5px;
         border: thin solid black;
         margin: 15px 0;
       }
@@ -55,7 +55,7 @@
         background-color: yellow;
       }
       .article-preview {
-        width: 60%;
+        width: 80%;
         margin: 0 auto;
         overflow: hidden;
         word-break: break-all;
@@ -177,6 +177,10 @@
       },
       searchChanged: function(q) {
         if(q != "" && q != undefined) {
+          var inflight = this.$.searchAjax.activeRequests;
+          for(var i = 0 ; i < inflight.length; i++) {
+            inflight[i].abort();
+          }
           this.toggle(true);
           this.$.searchAjax.generateRequest();
         }
@@ -188,6 +192,12 @@
       },
       createSnippet: function(text) {
         var maxlen = 300;
+        while(typeof text == "object") {
+          text = text[0];
+          if(typeof text == "object") {
+            text = text.body
+          }
+        }
         return text.substring(0, maxlen) + (text.length > maxlen ? "…" : "");
       },
       pagify: function(data, page, itemsPerPage) {
@@ -196,7 +206,10 @@
         return data.slice(start, end);
       },
       exit: function() {
-        this.toggle(false, true);
+        // this.toggle(false, true);
+        var el = this.$.fullview;
+        el.classList.remove("expanded");
+        this.$.inlineSearchInput.focus();
       },
       toggle: function(close, fromEsc) {
         var el = this.$.fullview;
