@@ -8,6 +8,8 @@
 <link rel="import" href="bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="wiki-search.html">
+<link rel="import" href="wiki-article.html">
+<link rel="import" href="wiki-home.html">
 <dom-module id="wiki-main">
   <style>
     #drawer-content {
@@ -26,7 +28,7 @@
       cursor: pointer;
       transition: all 0.3s;
       border: thin solid black;
-      border-radius: 25px;
+      border-radius: 5px;
       color: #888;
       background-color: rgba(25,25,25,0.25);
       margin: 8px 0;
@@ -43,35 +45,39 @@
     .nav-button:focus:before {
       background: initial;
     }
+    #mainContent {
+      height: 100%;
+      overflow: auto;
+    }
   </style>
   <template>
-    <paper-drawer-panel drawer-width="350px">
+    <paper-drawer-panel id="drawerPanel" narrow="{{isNarrowView}}" drawer-width="350px">
       <paper-header-panel id="drawer" drawer>
         <div id="drawer-content">
           <wiki-search on-article-load="drawArticle"></wiki-search>
           <paper-item on-tap="changeContent" content="home" class="nav-button active-content">Home</paper-item>
           <paper-item on-tap="changeContent" content="profile" class="nav-button">Profile</paper-item>
           <paper-item on-tap="changeContent" content="recent" class="nav-button">Recent Edits</paper-item>
-          <paper-item on-tap="changeContent" content="articles" class="nav-button">Your Articles</paper-item>
+          <paper-item on-tap="changeContent" content="articles" class="nav-button">Your Contributions</paper-item>
         </div>
       </paper-header-panel>
-      <paper-header-panel main>
-        <template is="dom-if" if="{{isActive(activeContent, 'home'))}}">
-          <wiki-home></wiki-home>
-        </template>
-        <template is="dom-if" if="{{isActive(activeContent, 'profile')}}">
-          <wiki-profile></wiki-profile>
-        </template>
-        <template is="dom-if" if="{{isActive(activeContent, 'recent')}}">
-          <wiki-recent></wiki-recent>
-        </template>
-        <template is="dom-if" if="{{isActive(activeContent, 'articles')}}">
-          <wiki-articles></wiki-articles>
-        </template>
-        <template is="dom-if" if="{{isActive(activeContent, 'article')}}">
-
-        </template>
-      </paper-header-panel>
+        <div id="mainContent" main>
+          <template is="dom-if" if="{{isActive(activeContent, 'home')}}">
+            <wiki-home></wiki-home>
+          </template>
+          <template is="dom-if" if="{{isActive(activeContent, 'profile')}}">
+            <wiki-profile></wiki-profile>
+          </template>
+          <template is="dom-if" if="{{isActive(activeContent, 'recent')}}">
+            <wiki-recent></wiki-recent>
+          </template>
+          <template is="dom-if" if="{{isActive(activeContent, 'articles')}}">
+            <wiki-articles></wiki-articles>
+          </template>
+          <template is="dom-if" if="{{isActive(activeContent, 'article')}}">
+            <wiki-article article="{{currentArticle}}"></wiki-article>
+          </template>
+        </div>
     </paper-drawer-panel>
   </template>
   <script>
@@ -89,6 +95,10 @@
           value: [
 
           ]
+        },
+        isNarrowView: {
+          type: Boolean,
+          observer: 'narrowChanged'
         },
         currentSearch: {
           type: String,
@@ -113,7 +123,10 @@
         for(var i = 0; i < active.length; i++) {
           active[i].classList.remove("active-content");
         }
-        this.activeContent = e.target.content;
+        console.dir(e.target);
+        console.log(this.activeContent)
+        this.activeContent = e.target.getAttribute("content");
+        console.log(this.activeContent)
         e.target.classList.add("active-content");
       },
       receivedSearchResponse: function(e, data) {
@@ -138,16 +151,22 @@
         }
       },
       isActive: function(a, b) {
+        console.log(a, b);
         return a == b;
       },
       drawArticle: function(e, data) {
-        console.log(data);
         var active = document.getElementsByClassName("active-content");
         for(var i = 0; i < active.length; i++) {
           active[i].classList.remove("active-content");
         }
-        this.currentArticle = data;
-        this.activeContent = "article";
+        this.$.mainContent.scrollTop = 0;
+        if(this.isNarrowView) {
+          this.$.drawerPanel.closeDrawer();
+        }
+        console.log(this.activeContent)
+        this.set("currentArticle", data);
+        this.set("activeContent", "article");
+        console.log(this.activeContent)
       },
       doLiveSearch: function() {
         if(this.currentSearch == "" || !this.currentSearch) {
@@ -157,6 +176,9 @@
         this.set("searchData", []);
         this.$.dropdown_search.generateRequest();
 
+      },
+      narrowChanged: function() {
+        console.log("Narrow changed", arguments[0]);
       },
       computeSearchUrl: function(q) {
         console.log("generating search url");

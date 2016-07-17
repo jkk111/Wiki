@@ -1,0 +1,84 @@
+<dom-module id="wiki-home">
+  <style>
+    #content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .content-panel {
+      padding: 1em;
+      box-sizing: border-box;
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      text-align: center;
+    }
+    #left {
+    }
+    #right {
+      left: 50%;
+    }
+    .stat-heading {
+      margin-top: 0;
+    }
+  </style>
+  <template>
+    <iron-ajax></iron-ajax>
+    <div id="content">
+      <div id="left" class="content-panel">
+        <div id="active-users">
+          <h4 class="stat-heading">The most active users</h4>
+          <template is="dom-repeat" items="{{stats.activeUsers}}">
+            <div class="active-user">{{fixIndex(index)}} - {{item}}</div>
+          </template>
+        </div>
+      </div>
+      <div id="right" class="content-panel">
+        <div id="most-viewed">
+          <h4 class="stat-heading">The most viewed Articles</h4>
+          <template is="dom-repeat" items="{{stats.mostViewed}}">
+            <div class="most-viewed-article">{{fixIndex(index)}} - {{item.name}} {{item.views}}</div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'wiki-home',
+      properties: {
+        stats: {
+          type: Object,
+          value: {
+            activeUsers: [ "jkk111", "otherguy", "lol", "test", "1234" ],
+            mostViewed: [
+              {
+                name: "leap",
+                views: 107
+              },
+              {
+                name: "jump",
+                views: 82
+              },
+              {
+                name: "skip",
+                views: 65
+              },
+              {
+                name: "hop",
+                views: 31
+              },
+              {
+                name: "run",
+                views: 8
+              }
+            ]
+          }
+        }
+      },
+      fixIndex: function(i) {
+        return i + 1;
+      }
+    });
+  </script>
+</dom-module>
