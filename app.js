@@ -1,7 +1,24 @@
 var crypto = require("crypto");
 var express = require("express");
 var db = require("./util/db.js");
-var app = express();
+var vulcanize = require("vulcanize");
+var fs = require("fs")
+;;var app = express();
+app.get(function(req, res) {
+  if(!req.query.rebuild && req.body.rebuild) {
+    return next();
+  }
+  console.log("rebuilding");
+  var vulcan = new vulcanize({
+    abspath: `${__dirname}/static`
+  });
+  vulcan.process("dv_index.html", function(err, inlinedHtml) {
+    fs.writeFile("static/index.html", inlinedHtml, "utf8", function(err) {
+      if(err) console.error(err);
+      next();
+    });
+  });
+});
 app.use(express.static("static"));
 app.listen(80);
 app.get("/search", function(req, res) {
@@ -86,4 +103,4 @@ app.get("/wiki/:article", function(req, res) {
 app.get("/search", function(req, res) {
   var results = db.fetch(req.query.q);
   res.send(results);
-})
+});
